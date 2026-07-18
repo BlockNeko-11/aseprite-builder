@@ -101,15 +101,15 @@ jobs:
         shell: bash
         working-directory: aseprite
         run: |
-          export enable_ccache = off
-          export laf_backend = skia
-          export enable_scripting = on
-          export build_type = RelWithDebInfo
+          export enable_ccache=off
+          export laf_backend=skia
+          export enable_scripting=on
+          export build_type=RelWithDebInfo
 
           if [[ "${{ runner.os }}" == "macOS" ]] ; then
-            export skia_arch = arm64
+            export skia_arch=arm64
           else
-            export skia_arch = x64
+            export skia_arch=x64
           fi
 
           cmake -S . -B build -G Ninja \
