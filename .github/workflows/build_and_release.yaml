@@ -1,52 +1,34 @@
 name: Build and release Aseprite
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'BuildLog.md'
   workflow_dispatch:
+    inputs:
+      aseprite_version:
+        description: 'The version of aseprite'
+        required: true
 env:
   BUILD_TYPE: Release
 
 jobs:
-  fetch-aseprite-info:
-    name: Fetch deps info
-    runs-on: ubuntu-latest
-    outputs:
-      download-link: ${{ steps.aseprite-link.outputs.download-link }}
-      release-tag: ${{ steps.aseprite-link.outputs.release-tag }}
-    steps:
-      - name: Fetch Aseprite release link
-        id: aseprite-link
-        uses: a1393323447/fetch-release@main
-        with:
-          group: aseprite
-          repo: aseprite
-          match: Aseprite-.*?-Source.zip
-
-  create-release:
-    name: Create Release
-    runs-on: ubuntu-latest
-    needs: fetch-aseprite-info
-    permissions:
-      contents: write
-    outputs:
-      download-link: ${{ needs.fetch-aseprite-info.outputs.download-link }}
-      release-tag: ${{ needs.fetch-aseprite-info.outputs.release-tag }}
-    steps:
-      - uses: actions/checkout@v7
-      - uses: ncipollo/release-action@v1.21.0
-        with:
-          tag: ${{ needs.fetch-aseprite-info.outputs.release-tag }}
-          body: Aseprite-${{ needs.fetch-aseprite-info.outputs.release-tag }}
-          skipIfReleaseExists: true
-          token: ${{ secrets.GITHUB_TOKEN }}
+#  create-release:
+#    name: Create Release
+#    runs-on: ubuntu-latest
+#    permissions:
+#      contents: write
+#    outputs:
+#      download-link: ${{ needs.fetch-aseprite-info.outputs.download-link }}
+#      release-tag: ${{ needs.fetch-aseprite-info.outputs.release-tag }}
+#    steps:
+#      - uses: actions/checkout@v7
+#      - uses: ncipollo/release-action@v1.21.0
+#        with:
+#          tag: ${{ needs.fetch-aseprite-info.outputs.release-tag }}
+#          body: Aseprite-${{ needs.fetch-aseprite-info.outputs.release-tag }}
+#          skipIfReleaseExists: true
+#          token: ${{ secrets.GITHUB_TOKEN }}
 
   build-aseprite:
     name: Build Aseprite
-    needs: create-release
     permissions:
       contents: write
     runs-on: ${{ matrix.os }}
@@ -67,18 +49,23 @@ jobs:
 
       - name: Checkout Repository
         uses: actions/checkout@v7
+      
+      - name: Install wget (Windows only)
+        if: runner.os == 'Windows'
+        run: |
+          choco install wget -y --no-progress
 
       - name: Install Aseprite
         shell: bash
         run: |
-          git clone --recurse-submodules -j8 https://github.com/aseprite/aseprite --branch ${{ needs.create-release.outputs.release-tag }}
+          wget -O Aseprite.zip https://github.com/aseprite/aseprite/releases/download/v${{ inputs.aseprite_version }}/Aseprite-v${{ inputs.aseprite_version }}-Source.zip
+          unzip Aseprite.zip aseprite
       
-      - name: Install Skia
+      - name: Install Skia (Aseprite/Skia) (release m124)
         working-directory: aseprite
         shell: bash
         run: |
           if [[ "${{ runner.os }}" == "Windows" ]] ; then
-            choco install wget -y --no-progress
             wget https://github.com/aseprite/skia/releases/download/m124-08a5439a6b/Skia-Windows-Release-x64.zip
             unzip Skia-Windows-Release-x64.zip -d skia
           elif [[ "${{ runner.os }}" == "macOS" ]] ; then
@@ -138,14 +125,21 @@ jobs:
         working-directory: aseprite/build/bin
         run: echo '# This file is here so Aseprite behaves as a portable program' > aseprite.ini
 
-      - name: Create release
-        working-directory: aseprite/build/bin
-        run: 7z -tzip a Aseprite-${{ needs.create-release.outputs.release-tag }}-${{ runner.os }}.zip *
+#      - name: Create release
+#        working-directory: aseprite/build/bin
+#        run: 7z -tzip a Aseprite-${{ inputs.aseprite_version }}-${{ runner.os }}.zip *
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with: 
+          name: Aseprite-${{ inputs.aseprite_version }}-${{ runner.os }}
+          path: |
+            aseprite/build/bin
 
-      - name: Upload release
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: aseprite/build/bin/Aseprite-${{ needs.create-release.outputs.release-tag }}-${{ runner.os }}.zip
-          asset_name: Aseprite-${{ needs.create-release.outputs.release-tag }}-${{ runner.os }}.zip
-          tag: ${{ needs.create-release.outputs.release-tag }}
+#      - name: Upload release
+#        uses: svenstaro/upload-release-action@v2
+#        with:
+#          repo_token: ${{ secrets.GITHUB_TOKEN }}
+#          file: aseprite/build/bin/Aseprite-${{ inputs.aseprite_version }}-${{ runner.os }}.zip
+#          asset_name: Aseprite-${{ inputs.aseprite_version }}-${{ runner.os }}.zip
+#          tag: ${{ inputs.aseprite_version }}
