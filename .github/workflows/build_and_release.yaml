@@ -37,7 +37,7 @@ jobs:
           os: [ windows-latest, ubuntu-latest, macOS-latest ]
         fail-fast: false
     steps:
-      - name: Install Dependencies
+      - name: Install Dependencies (Ubuntu only)
         if: runner.os == 'Linux'
         shell: bash
         run: |
@@ -59,7 +59,7 @@ jobs:
         shell: bash
         run: |
           wget -O Aseprite.zip https://github.com/aseprite/aseprite/releases/download/v${{ inputs.aseprite_version }}/Aseprite-v${{ inputs.aseprite_version }}-Source.zip
-          unzip Aseprite.zip aseprite
+          unzip Aseprite.zip -d aseprite
       
       - name: Install Skia (Aseprite/Skia) (release m124)
         working-directory: aseprite
@@ -80,7 +80,7 @@ jobs:
 #      - name: Install Ninja
 #        uses: aseprite/get-ninja@main
 
-      - name: Setup Developer Command Prompt for MSVC
+      - name: Setup Developer Command Prompt for MSVC (Windows only)
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1.13.0
 
