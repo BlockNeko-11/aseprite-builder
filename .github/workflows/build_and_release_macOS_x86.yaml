@@ -1,12 +1,11 @@
 name: Build and release Aseprite (macOS x86)
 
 on:
-#  manually run only
-#  push:
-#    branches:
-#      - main
-#    paths:
-#      - 'BuildLog.md'
+  push:
+    branches:
+      - main
+    paths:
+      - 'BuildLog.md'
   workflow_dispatch:
 env:
   BUILD_TYPE: Release
