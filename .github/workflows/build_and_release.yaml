@@ -89,9 +89,10 @@ jobs:
             wget https://github.com/aseprite/skia/releases/download/m124-08a5439a6b/Skia-Linux-Release-x64.zip
             unzip Skia-Linux-Release-x64.zip -d skia
           fi
-      
-      - name: Install Ninja
-        uses: aseprite/get-ninja@main
+
+#      gha new runner images have already installed Ninja
+#      - name: Install Ninja
+#        uses: aseprite/get-ninja@main
 
       - name: Setup Developer Command Prompt for MSVC
         if: runner.os == 'Windows'
