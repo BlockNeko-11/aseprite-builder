@@ -10,25 +10,23 @@ env:
   BUILD_TYPE: Release
 
 jobs:
-#  create-release:
-#    name: Create Release
-#    runs-on: ubuntu-latest
-#    permissions:
-#      contents: write
-#    outputs:
-#      download-link: ${{ needs.fetch-aseprite-info.outputs.download-link }}
-#      release-tag: ${{ needs.fetch-aseprite-info.outputs.release-tag }}
-#    steps:
-#      - uses: actions/checkout@v7
-#      - uses: ncipollo/release-action@v1.21.0
-#        with:
-#          tag: ${{ needs.fetch-aseprite-info.outputs.release-tag }}
-#          body: Aseprite-${{ needs.fetch-aseprite-info.outputs.release-tag }}
-#          skipIfReleaseExists: true
-#          token: ${{ secrets.GITHUB_TOKEN }}
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ncipollo/release-action@v1.21.0
+        with:
+          tag: v${{ inputs.aseprite_version }}
+          body: Aseprite-v${{ inputs.aseprite_version }}
+          skipIfReleaseExists: true
+          token: ${{ secrets.GITHUB_TOKEN }}
 
   build-aseprite:
     name: Build Aseprite
+    needs: create-release
     permissions:
       contents: write
     runs-on: ${{ matrix.os }}
@@ -124,22 +122,22 @@ jobs:
       - name: Make portable zip
         working-directory: aseprite/build/bin
         run: echo '# This file is here so Aseprite behaves as a portable program' > aseprite.ini
-
-#      - name: Create release
-#        working-directory: aseprite/build/bin
-#        run: 7z -tzip a Aseprite-${{ inputs.aseprite_version }}-${{ runner.os }}.zip *
       
-      - name: Upload artifact
-        uses: actions/upload-artifact@v7
-        with: 
-          name: Aseprite-${{ inputs.aseprite_version }}-${{ runner.os }}
-          path: |
-            aseprite/build/bin
+#      - name: Upload artifact
+#        uses: actions/upload-artifact@v7
+#        with: 
+#          name: Aseprite-${{ inputs.aseprite_version }}-${{ runner.os }}
+#          path: |
+#            aseprite/build/bin
+      
+      - name: Create release
+        working-directory: aseprite/build/bin
+        run: 7z -tzip a Aseprite-${{ inputs.aseprite_version }}-${{ runner.os }}.zip *
 
-#      - name: Upload release
-#        uses: svenstaro/upload-release-action@v2
-#        with:
-#          repo_token: ${{ secrets.GITHUB_TOKEN }}
-#          file: aseprite/build/bin/Aseprite-${{ inputs.aseprite_version }}-${{ runner.os }}.zip
-#          asset_name: Aseprite-${{ inputs.aseprite_version }}-${{ runner.os }}.zip
-#          tag: ${{ inputs.aseprite_version }}
+      - name: Upload release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: aseprite/build/bin/Aseprite-${{ inputs.aseprite_version }}-${{ runner.os }}.zip
+          asset_name: Aseprite-${{ inputs.aseprite_version }}-${{ runner.os }}.zip
+          tag: ${{ inputs.aseprite_version }}
